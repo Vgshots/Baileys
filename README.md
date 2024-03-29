@@ -1,24 +1,31 @@
-# Baileys - Typescript/Javascript WhatsApp Web API
+# Baileys - WhatsApp Web API for Typescript/Javascript
 
 ### Important Note
 
-This library was originally a project for **CS-2362 at Ashoka University** and is in no way affiliated with or endorsed by WhatsApp. Use at your own discretion. Do not spam people with this. We discourage any stalkerware, bulk or automated messaging usage. 
+This library originated as a project for **CS-2362 at Ashoka University** and is not affiliated with or endorsed by WhatsApp. Use responsibly. Do not engage in spamming or any form of unethical messaging practices. We strongly discourage the use of this library for stalking, bulk messaging, or automated messaging.
 
 #### Liability and License Notice
-Baileys and its maintainers cannot be held liable for misuse of this application, as stated in the [MIT license](https://github.com/WhiskeySockets/Baileys/blob/master/LICENSE).
+Baileys and its maintainers cannot be held responsible for any misuse of this application, as outlined in the [MIT license](https://github.com/WhiskeySockets/Baileys/blob/master/LICENSE).
 
 ##
 
-Baileys does not require Selenium or any other browser to be interface with WhatsApp Web, it does so directly using a **WebSocket**. 
-Not running Selenium or Chromimum saves you like **half a gig** of ram :/ 
-Baileys supports interacting with the multi-device & web versions of WhatsApp.
-Thank you to [@pokearaujo](https://github.com/pokearaujo/multidevice) for writing his observations on the workings of WhatsApp Multi-Device. Also, thank you to [@Sigalor](https://github.com/sigalor/whatsapp-web-reveng) for writing his observations on the workings of WhatsApp Web and thanks to [@Rhymen](https://github.com/Rhymen/go-whatsapp/) for the __go__ implementation.
- 
-## Please Read
+Baileys allows direct interaction with WhatsApp Web without requiring Selenium or any other browser intermediary; it communicates directly using a **WebSocket**. By eliminating the need for Selenium or Chromium, Baileys significantly reduces memory usage, saving approximately **half a gigabyte** of RAM. Additionally, Baileys is compatible with both the multi-device and web versions of WhatsApp.
 
-The original repository had to be removed by the original author - we now continue development in this repository here.
-This is the only official repository and is maintained by the community.
- **Join the Discord [here](https://discord.gg/WeJM5FP9GG)**
+# بيليس - واجهة برمجية لواتساب عبر الويب باستخدام TypeScript/Javascript
+
+### ملاحظة هامة
+
+تم إنشاء هذه المكتبة كمشروع لمقرر CS-2362 في جامعة أشوكا ولا تنتمي بأي شكل من الأشكال إلى واتساب أو تحظى بدعم منه. استخدمها بحكمة. لا ترسل رسائل غير مرغوب فيها أو تستخدم هذا البرنامج للترويج غير الأخلاقي. نحن ننصح بشدة عدم استخدام هذه المكتبة للتجسس أو الرسائل الجماعية أو الرسائل التلقائية.
+
+#### إشعار المسؤولية والترخيص
+لا يمكن مساءلة بيليس أو من يقوم بصيانته عن سوء استخدام هذا التطبيق، كما هو موضح في [رخصة MIT](https://github.com/WhiskeySockets/Baileys/blob/master/LICENSE).
+
+##
+
+بيليس لا يحتاج إلى Selenium أو أي متصفح آخر للتفاعل مع واتساب عبر الويب، بل يتصل مباشرة باستخدام WebSocket. عدم تشغيل Selenium أو Chromium يوفر لك حوالي نصف جيجابايت من الذاكرة :/
+بيليس متوافق مع الإصدارات متعددة الأجهزة والويب لواتساب.
+
+
  
 ## Example
 
