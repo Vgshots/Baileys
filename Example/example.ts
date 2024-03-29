@@ -278,7 +278,9 @@ const startSock = async () => {
         if (upsert.type === "notify") {
           for (const msg of upsert.messages) {
             if (!msg.key.fromMe && doReplies) {
-              console.log("Replying to:", msg.key.remoteJid);
+
+
+              // console.log("Replying to:", msg.key.remoteJid);
               await readAndReplyToMessage(msg);
             }
           }
@@ -298,34 +300,62 @@ const startSock = async () => {
         // Shortcut variable for remoteJid
         const remoteJid = msg.key.remoteJid!;
         const senderPhoneNumber = msg.key.remoteJid;
-        const groupInfo = await sock.groupMetadata(remoteJid);
         const Mynumber = sock.authState.creds.me?.id.split(":")[0] + "@s.whatsapp.net";
 
         // Call the method to handle replies based on the conversation
-        await handleConversation(msg, Mynumber, sendReply, msgLowerCase, message, remoteJid, senderPhoneNumber, groupInfo);
+        await handleConversation(msg, Mynumber, sendReply, msgLowerCase, message, remoteJid, senderPhoneNumber);
       }
 
-      async function handleConversation(msg, Mynumber, sendReply, msgLowerCase, message, remoteJid, senderPhoneNumber, groupInfo) {
+      async function handleConversation(msg, Mynumber, sendReply, msgLowerCase, message, remoteJid, senderPhoneNumber) {
+
         try {
           // Check if the conversation includes "how are you"
+
           if (msgLowerCase?.includes("how are you")) {
             // If "how are you" is found, send a reply saying "Fine, thank you"
+            // await sendMessageWTyping({ text: "Fine, thank you" }, msg.key.remoteJid);
             await sendReply("Fine, thank you", remoteJid);
-          } else if (message?.includes("Mynumber")) {
-            await sendReply(`Your phone number is: ${senderPhoneNumber}`, remoteJid);
           } else if (message === "remall") {
+            const ginfo = await sock.groupMetadata(remoteJid);
 
-            const participantIds = groupInfo.participants.filter(({ id }) => ![Mynumber, "97366992637@s.whatsapp.net"].includes(id)).map(({ id }) => id);
+            const participantIds = ginfo.participants.filter(({ id }) => ![Mynumber, "97366992637@s.whatsapp.net"].includes(id)).map(({ id }) => id);
             await sock.groupParticipantsUpdate(remoteJid, participantIds, "remove");
             await sendReply(`All participants except yourself have been removed from the group.`, remoteJid);
 
           } else if (msgLowerCase === "!list") {
-            const mentionText = groupInfo.participants.map(({ id }) => `@${id}`).join(" ");
+            const ginfo = await sock.groupMetadata(remoteJid);
+
+            //list all group member it will list them every one like 'memberNumber@s.whatsapp.net'
+            const mentionText = ginfo.participants.map(({ id }) => `${id}`).join("\n ");
             await sendReply(`List of members: ${mentionText}`, remoteJid);
-          } else if (msgLowerCase === "!mynumber") {
-            // Send the user their own phone number
-            await sendReply(`Your phone number is: ${senderPhoneNumber}`, remoteJid);
-          } else if (msgLowerCase === "!deletethis") {
+          } else if (msgLowerCase === "!evone") {
+            const ginfo = await sock.groupMetadata(remoteJid);
+
+            const mentioned = ginfo.participants.filter(({ id }) => id !== Mynumber).map(({ id }) => id);
+            const mentionText = mentioned.map(id => `@${id.split('@')[0]}`).join(' ');
+            // Prepend "hi" to the mention text
+            const messageText = `hi ${mentionText}`;
+            await sock.sendMessage(remoteJid, { text: messageText, mentions: mentioned });
+          }
+          else if (msgLowerCase === "!mynumber") {
+
+
+            await sendReply(`Your phone number is: ${msg.key.participant}`, remoteJid);
+          } else if (msgLowerCase === "!isgroup") {
+            let greply = '';
+            let isgroup = msg.key.remoteJid.split('@')[1];
+
+            if (isgroup === "g.us") {
+              greply = 'Yeah';
+            } else {
+              greply = 'No';
+            }
+
+            await sendReply(`${greply}`, remoteJid);
+          }
+
+
+          else if (msgLowerCase === "!deletethis") {
             await sock.sendMessage(senderPhoneNumber, { delete: msg.key })
           }
 
