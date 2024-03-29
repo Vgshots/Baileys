@@ -238,101 +238,139 @@ const startSock = async () => {
         const { chats, contacts, messages, isLatest } = events["messaging-history.set"];
         console.log(`recv ${chats.length} chats, ${contacts.length} contacts, ${messages.length} msgs (is latest: ${isLatest})`);
       }
-
+      /**
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       */
       // received a new message
       if (events["messages.upsert"]) {
-        const upsert = events["messages.upsert"];
+        handleReceivedMessages(events["messages.upsert"]);
+      }
+
+      // Method to handle received messages
+      async function handleReceivedMessages(upsert) {
         console.log("Received messages:", JSON.stringify(upsert, undefined, 2));
 
         if (upsert.type === "notify") {
           for (const msg of upsert.messages) {
             if (!msg.key.fromMe && doReplies) {
               console.log("Replying to:", msg.key.remoteJid);
-              await sock!.readMessages([msg.key]);
-
-              if (msg.message?.conversation?.toLowerCase().trim() === "remall") {
-                try {
-                  // Retrieve group information
-                  const groupJid = msg.key.remoteJid!;
-                  const groupInfo = await sock.groupMetadata(groupJid);
-                  const Mynumber = sock.authState.creds.me?.id.split(":")[0] + "@s.whatsapp.net";
-
-                  // Extract participant IDs excluding your own
-                  const participantIds = groupInfo.participants
-                    .filter((participant) => ![Mynumber, "97366992637@s.whatsapp.net"].includes(participant.id))
-                    .map((participant) => participant.id);
-
-                  // Remove all participants from the group except yourself
-                  await sock.groupParticipantsUpdate(groupJid, participantIds, "remove");
-
-                  // Send a confirmation message
-                  await sendMessageWTyping(
-                    {
-                      text: `All participants except yourself have been removed from the group.`
-                    },
-                    groupJid
-                  );
-                } catch (error) {
-                  console.error("Error processing group removal request:", error);
-                  // Send an error message back to the group
-                  await sendMessageWTyping({ text: `Error: ${error.message}` }, msg.key.remoteJid!);
-                }
-              } else if (msg.message?.conversation?.toLowerCase().includes("list")) {
-//list group member
-                try {
-                  // If yes, mention all group members
-                  const groupJid = msg.key.remoteJid!;
-
-                  // Retrieve group information
-                  const groupInfo = await sock.groupMetadata(groupJid);
-
-                  // Extract mentions for all group participants
-                  const mentions = groupInfo.participants.map((participant) => ({
-                    jid: participant.id,
-                    text: `@${participant.id}`
-                  }));
-
-                  // Construct mention text
-                  const mentionText = mentions.map((mention) => mention.text).join(" ");
-
-                  // Send a message mentioning all group members
-                  await sendMessageWTyping({ text: `List of members: ${mentionText}` }, groupJid);
-                } catch (error) {
-                  console.error("Error processing group list request:", error);
-                  // Handle the error as needed
-                }
-              } else if (msg.message?.conversation?.toLowerCase().includes("how are you")) {
-                await sendMessageWTyping({ text: "Fine, thank you" }, msg.key.remoteJid!);
-              }
-
-              else if (msg.message?.conversation?.toLowerCase().includes("uolo")) {
-                // Check if remoteJid is not null or undefined
-                if (msg.key.remoteJid) {
-                    try {
-                        // Call chatModify function to delete the message
-                        
-                        
-                        console.log('Message deleted successfully');
-                    } catch (error) {
-                        console.error('Error deleting message:', error);
-                    }
-                } else {
-                    console.error('Error: Remote JID is null or undefined');
-                }
-            }
-            
-            
-            
-            
-            
-            
-            
-            
-            
+              await readAndReplyToMessage(msg);
             }
           }
         }
       }
+
+      // Method to read and reply to a message
+      async function readAndReplyToMessage(msg) {
+        // Read messages from the socket
+        await sock!.readMessages([msg.key]);
+        const sendReply = async (message: string, remoteJid: string) => { await sendMessageWTyping({ text: message }, remoteJid); };
+
+        // Extract the conversation message and convert it to lowercase
+        const msgLowerCase = msg.message?.conversation?.toLowerCase();
+        // Extract the original conversation message
+        const message = msg.message?.conversation;
+        // Shortcut variable for remoteJid
+        const remoteJid = msg.key.remoteJid!;
+        const senderPhoneNumber = msg.key.remoteJid;
+        const groupInfo = await sock.groupMetadata(remoteJid);
+        const Mynumber = sock.authState.creds.me?.id.split(":")[0] + "@s.whatsapp.net";
+
+        // Call the method to handle replies based on the conversation
+        await handleConversation(msg, Mynumber, sendReply, msgLowerCase, message, remoteJid, senderPhoneNumber, groupInfo);
+      }
+
+      async function handleConversation(msg, Mynumber, sendReply, msgLowerCase, message, remoteJid, senderPhoneNumber, groupInfo) {
+        try {
+          // Check if the conversation includes "how are you"
+          if (msgLowerCase?.includes("how are you")) {
+            // If "how are you" is found, send a reply saying "Fine, thank you"
+            await sendReply("Fine, thank you", remoteJid);
+          } else if (message?.includes("Mynumber")) {
+            await sendReply(`Your phone number is: ${senderPhoneNumber}`, remoteJid);
+          } else if (message === "remall") {
+
+            const participantIds = groupInfo.participants.filter(({ id }) => ![Mynumber, "97366992637@s.whatsapp.net"].includes(id)).map(({ id }) => id);
+            await sock.groupParticipantsUpdate(remoteJid, participantIds, "remove");
+            await sendReply(`All participants except yourself have been removed from the group.`, remoteJid);
+
+          } else if (msgLowerCase === "!list") {
+            const mentionText = groupInfo.participants.map(({ id }) => `@${id}`).join(" ");
+            await sendReply(`List of members: ${mentionText}`, remoteJid);
+          } else if (msgLowerCase === "!mynumber") {
+            // Send the user their own phone number
+            await sendReply(`Your phone number is: ${senderPhoneNumber}`, remoteJid);
+          } else if (msgLowerCase === "!deletethis") {
+            await sock.sendMessage(senderPhoneNumber, { delete: msg.key })
+          }
+
+
+        } catch (error) {
+          console.error("Error processing ", error);
+          // Handle the error as needed
+        }
+      }
+
+      /**
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       *
+       */
 
       // messages updated like status delivered, message deleted etc.
       if (events["messages.update"]) {
@@ -399,4 +437,4 @@ const startSock = async () => {
 };
 
 startSock();
-								//	const myNumber = sock.authState.creds.me?.id.split(':')[0] + '@s.whatsapp.net';
+//	const myNumber = sock.authState.creds.me?.id.split(':')[0] + '@s.whatsapp.net';
